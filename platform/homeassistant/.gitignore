@@ -1,0 +1,35 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+# --- Environment & Secrets ---
+.env
+secrets.yaml
+.storage/
+.storagebk
+.storage*
+.cloud/
+
+# --- Home Assistant Internals ---
+*.db
+*.db-shm
+*.db-wal
+*.log
+*.log.*
+core.*
+
+# --- Python Virtual Env (Found in your 'config/bin' & 'lib') ---
+config/bin/
+config/include/
+config/lib/
+config/lib64/
+config/pyvenv.cfg
+
+# --- Music Assistant Internals ---
+ma-config/data/*.db
+ma-config/data/*.db-wal
+ma-config/data/*.log
+ma-config/data/*.pem
+ma-config/data/settings.json.backup
+.ha_run.lock
+# --- Media & Temp Files ---
+config/tts/
+config/image/
+.DS_Store

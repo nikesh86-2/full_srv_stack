@@ -1,0 +1,79 @@
+services:
+
+  # --------------------------------------------------
+  # Homepage Dashboard
+  # Self-hosted dashboard for all services
+  # --------------------------------------------------
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    user: "${PUID}:${PGID}"
+    networks:
+      - media
+    ports:
+      - "${HOMEPAGE_PORT}:3000"
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS}
+    volumes:
+      # Homepage configuration
+      - ./homepage/homepage-config:/app/config
+
+      # Docker socket for container stats widgets
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+
+  # --------------------------------------------------
+  # Uptime Kuma
+  # Self-hosted uptime monitoring
+  # --------------------------------------------------
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    ports:
+      - "${UPTIME_KUMA_PORT}:3001"
+    volumes:
+      - ./uptime-kuma:/app/data
+    restart: unless-stopped
+
+
+  # --------------------------------------------------
+  # Dozzle
+  # Real-time Docker container log viewer
+  # --------------------------------------------------
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    ports:
+      - "${DOZZLE_PORT}:8080"
+    volumes:
+      # Allows Dozzle to read container logs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
+
+  # --------------------------------------------------
+  # Glances
+  # System monitoring dashboard
+  # --------------------------------------------------
+  glances:
+    image: nicolargo/glances:latest
+    container_name: glances
+    pid: host
+    network_mode: host
+    environment:
+      - TZ=${TZ}
+      - GLANCES_OPT=${GLANCES_OPT}
+    volumes:
+      # Read container stats
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+      # Host OS information
+      - /etc/os-release:/etc/os-release:ro
+    restart: unless-stopped
+
+
+# Shared network used by media containers
+networks:
+  media:
+    external: true

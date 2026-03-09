@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    volumes:
+      - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:alpine
+    restart: always
+
+  app:
+    image: nextcloud:latest
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "${NEXTCLOUD_PORT}:80"
+    volumes:
+      - ${NEXTCLOUD_CONFIG}:/var/www/html
+      - ${NEXTCLOUD_DATA}:/var/www/html/data
+    restart: always

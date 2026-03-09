@@ -1,0 +1,30 @@
+services:
+
+  # --------------------------------------------------
+  # DuckDNS
+  # Dynamic DNS updater for DuckDNS domains
+  # --------------------------------------------------
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns
+
+    # Host networking allows accurate public IP detection
+    network_mode: host
+
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+
+      # Comma-separated list of DuckDNS subdomains
+      - SUBDOMAINS=${DUCKDNS_SUBDOMAINS}
+
+      # DuckDNS API token
+      - TOKEN=${DUCKDNS_TOKEN}
+
+      # Enable logging
+      - LOG_FILE=true
+
+    restart: unless-stopped
+
+

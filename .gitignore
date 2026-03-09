@@ -1,0 +1,87 @@
+# ==========================
+# Environment & Secrets
+# ==========================
+.env
+**/.env
+secrets.yaml
+.storage/
+.storagebk
+.storage*
+.cloud/
+
+# ==========================
+# Home Assistant Internals
+# ==========================
+platform/homeassistant/config/*.db
+platform/homeassistant/config/*.db-shm
+platform/homeassistant/config/*.db-wal
+platform/homeassistant/config/*.log
+platform/homeassistant/config/*.log.*
+platform/homeassistant/config/core.*
+platform/homeassistant/config/secrets.yaml
+
+# Python Virtual Environment (found in HA config)
+platform/homeassistant/config/bin/
+platform/homeassistant/config/include/
+platform/homeassistant/config/lib/
+platform/homeassistant/config/lib64/
+platform/homeassistant/config/pyvenv.cfg
+
+# TTS, Images, Temp
+platform/homeassistant/config/tts/
+platform/homeassistant/config/image/
+
+# ==========================
+# Music Assistant Internals
+# ==========================
+platform/homeassistant/ma-config/data/**/*.db
+platform/homeassistant/ma-config/data/**/*.db-wal
+platform/homeassistant/ma-config/data/**/*.log
+platform/homeassistant/ma-config/data/**/*.pem
+platform/homeassistant/ma-config/data/settings.json.backup
+platform/homeassistant/ma-config/data/.ha_run.lock
+
+# ==========================
+# Docker Configs & Secrets
+# ==========================
+**/data
+**/config
+**/letsencrypt
+**/vpn-config
+**/slskd-config
+**/soularr-config
+**/qbittorrent-config
+**/lidarr-config
+**/prowlarr-config
+**/sonarr-config
+**/radarr-config
+**/abr-config
+**/audiobookshelf
+**/homepage-config
+
+# ==========================
+# Backups / Snapshots
+# ==========================
+**/snapshot-*
+/apps/immich/Photos/backups
+/apps/immich/Photos/upload
+
+# ==========================
+# Logs & OS Junk
+# ==========================
+**/*.log
+.DS_Store
+*.swp
+
+# ==========================
+# Media & Misc
+# ==========================
+/media/media-stack/audiobookshelf/metadata
+/media/media-stack/abr-config/db.sqlite
+/media/media-stack/prowlarr-config/logs
+/media/media-stack/prowlarr-config/*.db
+/media/media-stack/slskd-config/data
+/media/media-stack/slskd-config/downloads
+/media/media-stack/slskd-config/incomplete
+/media/media-stack/slskd-config/scripts
+/media/media-stack/soularr-config/failure_list.txt

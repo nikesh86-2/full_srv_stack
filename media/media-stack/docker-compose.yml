@@ -1,0 +1,248 @@
+#
+services:
+  # VPN Sidecar: handles the tun0 connection for Soulseek / qBittorrent
+  vpn:
+    image: qmcgaw/gluetun
+    container_name: vpn
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=windscribe
+      - WIREGUARD_IMPLEMENTATION=kernelspace
+      - WIREGUARD_MTU=1280
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=YPhmQaI8ETQp0YgLhr/ltkjX1FVs/KiA7MU/CvDxg18=
+      - WIREGUARD_ADDRESSES=100.82.47.185/32
+      - WIREGUARD_PRESHARED_KEY=Iwe8kwyXZyStnDpc8GS07o4n24UN9U6MAiaZH47QsWs=
+      - WIREGUARD_ENDPOINT_PORT=443
+      - FIREWALL_VPN_INPUT_PORTS=10595
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.0.0/24,172.16.0.0/12,100.64.0.0/10
+      - TZ=Europe/London
+      - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh /gluetun/post-up.sh
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    volumes:
+      - ./vpn-config:/gluetun
+    restart: unless-stopped
+    ports:
+      - 8081:8081
+      - 9696:9696
+      - 5030:5030   # slskd TCP
+      - 5031:5031   # slskd SSL
+
+  # Soulseek daemon (behind VPN)
+  slskd:
+    image: slskd/slskd:latest
+    container_name: slskd
+    network_mode: "service:vpn"
+    user: "1002:1002"
+    environment:
+      - SLSKD_UMASK=002
+      - PUID=1002
+      - PGID=1002
+      - SLSKD_REMOTE_CONFIGURATION=true
+      - SLSKD_USERNAME=nikesh
+      - SLSKD_PASSWORD=m5kzdjxr
+      - SLSKD_SOULSEEK_USERNAME=nikesh
+      - SLSKD_SOULSEEK_PASSWORD=m5kzdjxr
+      - SLSKD_API_KEY=dILIUys8B0SX2zETmBHnpn50QdN1oXPK 
+    volumes:
+      - ./slskd-config:/app
+      - /home/homeassistant/MusicDL/soulseek/downloads:/app/downloads
+      - /home/homeassistant/MusicDL/soulseek/downloads:/downloads
+      - /home/homeassistant/MusicDL/soulseek/incomplete:/app/incomplete
+      - /home/homeassistant/MusicDL/soulseek/incomplete:/incomplete
+    restart: unless-stopped
+    depends_on:
+      - vpn
+
+  soularr:
+    image: mrusse08/soularr:latest
+    container_name: soularr
+    network_mode: "service:vpn"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PUID=1002
+      - PGID=1002
+      - TZ=Europe/London
+      - SCRIPT_INTERVAL=300
+    volumes:
+      - ./soularr-config:/data
+      - /home/homeassistant/MusicDL/soulseek/downloads:/downloads
+    depends_on:
+      - lidarr
+      - slskd
+      - vpn
+    restart: unless-stopped
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: "service:vpn"
+    environment:
+      - PUID=1002
+      - PGID=1002
+      - UMASK=002
+      - WEBUI_PORT=8081
+    volumes:
+      - ./qbittorrent-config:/config
+      - /home/homeassistant/MusicDL/torrents:/downloads
+    restart: unless-stopped
+    depends_on:
+      - vpn
+
+  # LAN-accessible applications
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    networks:
+      - media
+    environment:
+      - PUID=1002
+      - PGID=1002
+      - TZ=Europe/London
+    volumes:
+      - /home/homeassistant/MusicDL/lidarr-config:/config
+      - /mnt/nas/Music:/music
+      - /home/homeassistant/MusicDL/soulseek/downloads:/downloads/soulseek
+      - /home/homeassistant/MusicDL/torrents:/downloads/torrents
+      - ./scripts:/scripts
+    restart: unless-stopped
+    depends_on:
+      - vpn
+    ports:
+      - 8686:8686
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: "service:vpn"
+    environment:
+      - PUID=1002
+      - PGID=1002
+      - TZ=Europe/London
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    volumes:
+      - ./prowlarr-config:/config
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    networks:
+      - media
+    environment:
+      - PUID=1002
+      - PGID=1002
+      - TZ=Europe/London
+    volumes:
+      - /home/homeassistant/MusicDL/sonarr-config:/config
+      - /mnt/nas/TV:/tv
+      - /home/homeassistant/MusicDL/torrents/tv:/downloads/tv
+    restart: unless-stopped
+    ports:
+      - 8989:8989
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    networks:
+      - media
+    environment:
+      - PUID=1002
+      - PGID=1002
+      - TZ=Europe/London
+    volumes:
+      - /home/homeassistant/MusicDL/radarr-config:/config
+      - /mnt/nas/Movies:/movies
+      - /home/homeassistant/MusicDL/torrents/movies:/downloads/movies
+    restart: unless-stopped
+    ports:
+      - 7878:7878
+
+  audiobookrequest:
+    image: markbeep/audiobookrequest:latest
+    container_name: audiobookrequest
+    networks:
+      - media
+    environment:
+      - PUID=1002
+      - PGID=1002
+      - TZ=Europe/London
+      - ABR_APP__PORT=8001
+    volumes:
+      - ./abr-config:/config
+      - /home/homeassistant/MusicDL/torrents/Audiobooks:/downloads
+    restart: unless-stopped
+    ports:
+      - 8001:8001
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    networks:
+      - media
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - TZ=Europe/London
+    restart: unless-stopped
+    ports:
+      - 8191:8191
+
+  tor-proxy:
+    image: ghcr.io/avpnusr/torprivoxy:latest
+    container_name: tor-proxy
+    networks:
+      - media
+    environment:
+      - TZ=Europe/London
+    restart: always
+  #  ports:
+ #     - 9050:9050
+#      - 8118:8118
+
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    restart: unless-stopped
+    ports:
+      - 13378:80
+    volumes:
+      - ./audiobookshelf/config:/config
+      - ./audiobookshelf/metadata:/metadata
+      - /home/homeassistant/MusicDL/torrents/Audiobooks:/media/audiobooks
+      - /home/homeassistant/MusicDL/torrents/Podcasts:/media/podcasts
+    environment:
+      - TZ=Europe/London   # adjust
+
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    networks:
+      - media
+    environment:
+      - PUID=1002   # match your main media user
+      - PGID=1002
+      - TZ=Europe/London
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - /mnt/jellyfin/jelly-config:/config   # configuration and database
+      - /mnt/jellyfin/jellyfin_cache:/cache   # configuration and database
+      - /mnt/jellyfin/jellyfin_log:/log   # configuration and database
+      - /mnt/nas/Music:/media/Music
+      - /home/homeassistant/MusicDL/torrents/Audiobooks:/media/Music2
+      - /mnt/nas/Movies:/media/Movies
+      - /home/homeassistant/MusicDL/torrents/tv:/media/TV2
+      - /mnt/nas/TV:/media/TV # your media library
+      - /home/homeassistant/MusicDL/torrents/movies:/media/Movies2 # your media library
+    restart: unless-stopped
+    ports:
+      - 8096:8096  # HTTP
+
+networks:
+  media:
+    driver: bridge

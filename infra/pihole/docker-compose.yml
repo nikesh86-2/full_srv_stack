@@ -1,0 +1,38 @@
+services:
+
+  # --------------------------------------------------
+  # Pi-hole
+  # Network-wide ad blocking DNS server
+  # --------------------------------------------------
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+
+    networks:
+      pihole_ipvlan:
+        ipv4_address: ${PIHOLE_IP}
+      default:
+
+    environment:
+      TZ: ${TZ}
+      WEBPASSWORD: ${PIHOLE_WEBPASSWORD}
+
+    volumes:
+      # Pi-hole configuration
+      - ${PIHOLE_CONFIG_PATH}:/etc/pihole
+
+      # DNS logs
+      - ${PIHOLE_LOG_PATH}:/var/log/pihole
+
+    restart: unless-stopped
+
+# --------------------------------------------------
+# Networks
+# --------------------------------------------------
+networks:
+
+  # Static IP network for Pi-hole
+  pihole_ipvlan:
+    external: true
+  default:
+    driver: bridge 

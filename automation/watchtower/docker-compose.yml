@@ -1,0 +1,29 @@
+services:
+
+  # --------------------------------------------------
+  # Watchtower
+  # Automatically updates running Docker containers
+  # by pulling newer images and recreating containers.
+  # --------------------------------------------------
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+
+    volumes:
+      # Allows Watchtower to communicate with Docker
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    environment:
+      # Docker API version compatibility
+      - DOCKER_API_VERSION=${DOCKER_API_VERSION}
+
+      # Remove old images after updating containers
+      - WATCHTOWER_CLEANUP=${WATCHTOWER_CLEANUP}
+
+      # How often to check for updates (seconds)
+      - WATCHTOWER_POLL_INTERVAL=${WATCHTOWER_POLL_INTERVAL}
+
+      # Optional timezone for logs
+      - TZ=${TZ}
+
+    restart: unless-stopped
