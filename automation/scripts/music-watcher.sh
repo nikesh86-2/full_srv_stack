@@ -9,7 +9,7 @@ export TMPDIR="/mnt/backups/tmp"
 
 WATCH_DIRS=(
   "/home/homeassistant/MusicDL/soulseek/downloads"
-  "/home/homeassistant/MusicDL/torrents"
+  "/home/homeassistant/MusicDL/torrents/lidarr"
 )
 
 LOG_FILE="/home/homeassistant/music-watcher.log"

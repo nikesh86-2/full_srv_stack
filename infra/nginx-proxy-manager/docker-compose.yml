@@ -1,5 +1,4 @@
 services:
-
   # --------------------------------------------------
   # Nginx Proxy Manager
   # Reverse proxy + SSL management UI

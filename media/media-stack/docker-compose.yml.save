@@ -15,17 +15,17 @@ services:
       - WIREGUARD_PRESHARED_KEY=${VPN_PRESHARED_KEY}
       - WIREGUARD_ADDRESSES=${VPN_ADDRESSES}
       - SERVER_REGIONS=${SERVER_REGIONS}
-      - WIREGUARD_ENDPOINT_IP=149.36.51.131
       - WIREGUARD_ENDPOINT_PORT=443
       - FIREWALL_VPN_INPUT_PORTS=${VPN_FIREWALL_INPUT_PORTS}
       - FIREWALL_OUTBOUND_SUBNETS=${VPN_FIREWALL_SUBNETS}
-#      - DNS_UPSTREAM_RESOLVER_TYPE=doh
-#      - DNS_UPSTREAM_RESOLVERS=cloudflare,google,libredns,opendns,quad9,quadrant
+      - DNS_UPSTREAM_RESOLVER_TYPE=doh
+      - DNS_UPSTREAM_RESOLVERS=cloudflare,google
       - BLOCK_MALICIOUS=off
       - BLOCK_SURVEILLANCE=off
       - BLOCK_ADS=off
       - WIREGUARD_MTU=1280
       - TZ=${TZ}
+      - HEALTH_SUCCESS_WAIT=120s
 
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
@@ -260,10 +260,7 @@ services:
       - ${MEDIA_MUSIC}:/media/Music
       - ${MEDIA_MOVIES}:/media/Movies
       - ${MEDIA_TV}:/media/TV
-      - ${MEDIA2MOVIES}:/media/Movies2
-      - ${MEDIA2TV}:/media/TV2
-      - ${MEDIA_POD}:/media/Podcasts
-      - ${MEDIA_AUDIOBOOKS}:/media/Audiobooks
+
     ports:
       - ${JELLYFIN_PORT}:8096
 

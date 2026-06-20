@@ -26,6 +26,9 @@ platform/homeassistant/config/include/
 platform/homeassistant/config/lib/
 platform/homeassistant/config/lib64/
 platform/homeassistant/config/pyvenv.cfg
+platform/homeassistant/piper-data/
+platform/homeassistant/whisper-data/
+platform/homeassistant/.git*
 
 # TTS, Images, Temp
 platform/homeassistant/config/tts/
@@ -72,6 +75,13 @@ platform/homeassistant/ma-config/data/.ha_run.lock
 **/*.log
 .DS_Store
 *.swp
+*.db
+*.db-shm
+*.db-wal
+*.tmp
+*.bak
+*.
+
 
 # ==========================
 # Media & Misc

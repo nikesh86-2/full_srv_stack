@@ -25,10 +25,28 @@ services:
     # Host mode required for casting (AirPlay/Google Cast) across subnets
     network_mode: host
     environment:
-      - TZ=${TZ} 
+      - TZ=${TZ}
     volumes:
       - ./ma-config/data:/data
       - ${MUSIC_PATH}:/music:ro # NAS integration via NFS/SMB mount, using .env variable
     restart: unless-stopped
     depends_on:
       - home-assistant
+
+  whisper:
+    container_name: whisper
+    image: rhasspy/wyoming-whisper
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./whisper-data:/data
+    command: --model tiny-int8 --language en
+
+  piper:
+    container_name: piper
+    image: rhasspy/wyoming-piper
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./piper-data:/data
+    command: --voice en_GB-alba-medium

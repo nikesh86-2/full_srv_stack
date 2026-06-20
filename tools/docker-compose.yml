@@ -14,6 +14,8 @@ services:
       - "${HOMEPAGE_PORT}:3000"
     environment:
       - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS}
+      - PUID=${PUID}
+      - PGID=${PGID}
     volumes:
       # Homepage configuration
       - ./homepage/homepage-config:/app/config
@@ -34,6 +36,7 @@ services:
       - "${UPTIME_KUMA_PORT}:3001"
     volumes:
       - ./uptime-kuma:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
 
 
