@@ -27,7 +27,9 @@ log() {
 }
 
 should_ignore() {
-    [[ "$1" =~ (/(lidarr-config|radarr-config|sonarr-config|jellyfin|failed|failed_imports|failed-imports|incomplete|partial|temp|_unpack|removed|trash|tv|movies|Audiobooks)/|/\.) ]] && return 0
+    # Ignore specific directories and hidden files/directories
+    [[ "$1" =~ /(lidarr-config|radarr-config|sonarr-config|jellyfin|failed|failed_imports|failed-imports|incomplete|partial|temp|_unpack|removed|trash|tv|movies|Audiobooks)/ ]] && return 0
+    [[ "$1" =~ /\.$ ]] && return 0
     return 1
 }
 
