@@ -66,6 +66,7 @@ platform/homeassistant/ma-config/data/.ha_run.lock
 # Backups / Snapshots
 # ==========================
 **/snapshot-*
+**/*-backup-*.tar.gz
 /apps/immich/Photos/backups
 /apps/immich/Photos/upload
 
