@@ -5,6 +5,7 @@ services:
     networks:
       - media
       - default
+      - monitoring
 
     cap_add:
       - NET_ADMIN
@@ -19,14 +20,13 @@ services:
       - WIREGUARD_PRESHARED_KEY=${VPN_PRESHARED_KEY}
       - WIREGUARD_ADDRESSES=${VPN_ADDRESSES}
       - SERVER_REGIONS=${SERVER_REGIONS}
-      - WIREGUARD_ENDPOINT_IP=149.36.51.131
-      - WIREGUARD_ENDPOINT_PORT=443
+      - WIREGUARD_ENDPOINT_IP=${WIREGUARD_ENDPOINT_IP}
+      - WIREGUARD_ENDPOINT_PORT=${VPN_ENDPOINT_PORT}
       - FIREWALL_VPN_INPUT_PORTS=${VPN_FIREWALL_INPUT_PORTS}
       - FIREWALL_OUTBOUND_SUBNETS=${VPN_FIREWALL_SUBNETS}
       - DNS_UPSTREAM_RESOLVER_TYPE=doh
-      - DNS_UPSTREAM_RESOLVERS=cloudflare,google,libredns,opendns,quad9,quadrant
+      - DNS_UPSTREAM_RESOLVERS=cloudflare,quad9
       - BLOCK_MALICIOUS=on
-      - BLOCK_SURVEILLANCE=on
       - BLOCK_ADS=on
       - WIREGUARD_MTU=1280
       - TZ=${TZ}
@@ -38,15 +38,28 @@ services:
       - ${VPN_CONFIG_PATH}:/gluetun
 
     ports:
-      - ${VPN_PORT_WEBUI}:8081
-      - ${VPN_PORT_QB_1}:9696
-      - ${VPN_PORT_SLSKD_TCP}:5030
-      - ${VPN_PORT_SLSKD_SSL}:5031
-      - ${FLARESOLVERR_PORT}:8191
+      - ${VPN_PORT_QB_1}:${VPN_PORT_QB_1}
+      - ${VPN_PORT_SLSKD_TCP}:${VPN_PORT_SLSKD_TCP}
+      - ${VPN_PORT_SLSKD_SSL}:${VPN_PORT_SLSKD_SSL}
+      - ${BYPARR_PORT}:${BYPARR_PORT}
+      - ${PROWLARR_PORT}:${PROWLARR_PORT}
       - 9050:9050
       - ${NEW_VPN_ENDPOINT_PORT}:${VPN_ENDPOINT_PORT}
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
 
   slskd:
     image: slskd/slskd:latest
@@ -68,7 +81,20 @@ services:
       - ${DOWNLOADS_SOULSEEK}:/downloads
       - ${INCOMPLETE_SOULSEEK}:/incomplete
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 128M
     depends_on:
         vpn:
           condition: service_healthy
@@ -94,7 +120,20 @@ services:
       - slskd
       - vpn
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 32M
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -105,13 +144,26 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - UMASK=002
-      - WEBUI_PORT=8081
+      - WEBUI_PORT=${VPN_PORT_QB_1}
 
     volumes:
       - ${QBIT_CONFIG_PATH}:/config
       - ${DOWNLOADS_TORRENTS}:/downloads
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 128M
     depends_on:
         vpn:
           condition: service_healthy
@@ -121,6 +173,7 @@ services:
     container_name: lidarr
     networks:
       - media
+      - monitoring
 
     environment:
       - PUID=${PUID}
@@ -136,7 +189,20 @@ services:
     ports:
       - ${LIDARR_PORT}:8686
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -151,7 +217,20 @@ services:
     volumes:
       - ${PROWLARR_CONFIG_PATH}:/config
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
     depends_on:
         vpn:
           condition: service_healthy
@@ -161,6 +240,7 @@ services:
     container_name: sonarr
     networks:
       - media
+      - monitoring
 
     environment:
       - PUID=${PUID}
@@ -175,13 +255,27 @@ services:
     ports:
       - ${SONARR_PORT}:8989
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     networks:
       - media
+      - monitoring
 
     environment:
       - PUID=${PUID}
@@ -196,13 +290,27 @@ services:
     ports:
       - ${RADARR_PORT}:7878
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
 
   audiobookrequest:
     image: markbeep/audiobookrequest:latest
     container_name: audiobookrequest
     networks:
       - media
+      - monitoring
 
     environment:
       - PUID=${PUID}
@@ -217,22 +325,51 @@ services:
     ports:
       - ${ABR_PORT}:${ABR_PORT}
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
 
-  flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    container_name: flaresolverr
+  byparr:
+    image: ghcr.io/thephaseless/byparr:latest
+    container_name: byparr
     network_mode: "service:vpn"
+    shm_size: "1gb"
 
     environment:
       - LOG_LEVEL=${LOG_LEVEL}
       - TZ=${TZ}
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 128M
 
   audiobookshelf:
     image: ghcr.io/advplyr/audiobookshelf:latest
     container_name: audiobookshelf
+    networks:
+      - monitoring
 
     environment:
       - TZ=${TZ}
@@ -246,17 +383,31 @@ services:
     ports:
       - ${AUDIOBOOKSHELF_PORT}:80
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 128M
 
   jellyfin:
     image: jellyfin/jellyfin:latest
     container_name: jellyfin
     networks:
       - media
+      - monitoring
+
+    user: "${PUID}:${PGID}"
 
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
       - TZ=${TZ}
 
     devices:
@@ -276,8 +427,23 @@ services:
     ports:
       - ${JELLYFIN_PORT}:8096
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
 
 networks:
   media:
+    external: true
+  monitoring:
     external: true

@@ -1,0 +1,151 @@
+# Prometheus Configuration
+# See: https://prometheus.io/docs/prometheus/latest/configuration/configuration/
+
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+  external_labels:
+    cluster: 'srv-stack'
+    environment: 'production'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+rule_files:
+  - 'rules/*.yml'
+
+scrape_configs:
+  # --------------------------------------------------
+  # Prometheus self-monitoring
+  # --------------------------------------------------
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # --------------------------------------------------
+  # Node Exporter - Host metrics
+  # --------------------------------------------------
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # --------------------------------------------------
+  # cAdvisor - Container metrics
+  # --------------------------------------------------
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # --------------------------------------------------
+  # Docker Engine metrics
+  # --------------------------------------------------
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['host.docker.internal:9323']
+    # Note: Requires Docker metrics endpoint enabled
+    # dockerd --metrics-addr 0.0.0.0:9323
+
+  # --------------------------------------------------
+  # Immich
+  # --------------------------------------------------
+  - job_name: 'immich'
+    static_configs:
+      - targets: ['immich_server:2283']
+    metrics_path: '/api/stats/metrics'
+
+  # --------------------------------------------------
+  # Nextcloud
+  # --------------------------------------------------
+  - job_name: 'nextcloud'
+    static_configs:
+      - targets: ['nextcloud-app:80']
+    metrics_path: '/metrics'
+
+  # --------------------------------------------------
+  # Home Assistant (host network)
+  # --------------------------------------------------
+  - job_name: 'home-assistant'
+    static_configs:
+      - targets: ['host.docker.internal:8123']
+    metrics_path: '/api/prometheus'
+
+  # --------------------------------------------------
+  # Jellyfin
+  # --------------------------------------------------
+  - job_name: 'jellyfin'
+    static_configs:
+      - targets: ['jellyfin:8096']
+    metrics_path: '/Metrics/Prometheus'
+
+  # --------------------------------------------------
+  # Audiobookshelf
+  # --------------------------------------------------
+  - job_name: 'audiobookshelf'
+    static_configs:
+      - targets: ['audiobookshelf:80']
+    metrics_path: '/api/metrics/prometheus'
+
+  # --------------------------------------------------
+  # Nginx Proxy Manager
+  # --------------------------------------------------
+  - job_name: 'nginx-proxy-manager'
+    static_configs:
+      - targets: ['nginx-proxy-manager:81']
+    metrics_path: '/metrics'
+
+  # --------------------------------------------------
+  # Pi-hole
+  # --------------------------------------------------
+  - job_name: 'pihole'
+    static_configs:
+      - targets: ['pihole:80']
+    metrics_path: '/admin/api.php?prometheus'
+
+  # --------------------------------------------------
+  # Glances (host network)
+  # --------------------------------------------------
+  - job_name: 'glances'
+    static_configs:
+      - targets: ['host.docker.internal:61208']
+    metrics_path: '/api/3/metrics/prometheus'
+
+  # --------------------------------------------------
+  # Watchtower
+  # --------------------------------------------------
+  - job_name: 'watchtower'
+    static_configs:
+      - targets: ['watchtower:8080']
+    metrics_path: '/metrics'
+
+  # --------------------------------------------------
+  # Uptime Kuma
+  # --------------------------------------------------
+  - job_name: 'uptime-kuma'
+    static_configs:
+      - targets: ['uptime-kuma:3001']
+    metrics_path: '/api/metrics'
+
+  # --------------------------------------------------
+  # Media Stack Services on monitoring network
+  # --------------------------------------------------
+  - job_name: 'media-services'
+    static_configs:
+      - targets:
+          - 'sonarr:8989'
+          - 'radarr:7878'
+          - 'lidarr:8686'
+          - 'audiobookrequest:80'  # ABR_PORT
+    metrics_path: '/metrics'
+
+  # --------------------------------------------------
+  # VPN-mode Services (scraped via VPN container on monitoring network)
+  # --------------------------------------------------
+  - job_name: 'vpn-services'
+    static_configs:
+      - targets:
+          - 'vpn:8080'   # qbittorrent (VPN_PORT_QB_1)
+          - 'vpn:9696'   # prowlarr (PROWLARR_PORT)
+          - 'vpn:5030'   # slskd (SLSKD_TCP_PORT)
+    metrics_path: '/metrics'

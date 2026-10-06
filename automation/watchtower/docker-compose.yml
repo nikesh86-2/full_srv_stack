@@ -26,4 +26,24 @@ services:
       # Optional timezone for logs
       - TZ=${TZ}
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 32M
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    external: true

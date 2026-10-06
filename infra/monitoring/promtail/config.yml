@@ -1,0 +1,92 @@
+# Promtail Configuration - Ships Docker container logs to Loki
+# See: https://grafana.com/docs/loki/latest/clients/promtail/
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # --------------------------------------------------
+  # Docker Logs - All containers with labels
+  # --------------------------------------------------
+  - job_name: docker-containers
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/lib/docker/containers/*/*-json.log
+    pipeline_stages:
+      - docker: {}
+      - labels:
+          container_name:
+          container_image:
+          compose_project:
+          compose_service:
+      - match:
+          selector: '{container_name=~".+"}'
+          stages:
+            - labels:
+                container_name:
+                container_image:
+                compose_project:
+                compose_service:
+
+  # --------------------------------------------------
+  # Systemd Journal (host logs)
+  # --------------------------------------------------
+  - job_name: systemd-journal
+    journal:
+      max_age: 12h
+      path: /var/log/journal
+    relabel_configs:
+      - source_labels: ['__journal__systemd_unit']
+        target_label: 'unit'
+      - source_labels: ['__journal__hostname']
+        target_label: 'hostname'
+
+  # --------------------------------------------------
+  # NGINX Proxy Manager Access Logs
+  # --------------------------------------------------
+  - job_name: nginx-proxy-manager
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nginx-proxy-manager
+          __path__: /mnt/monitoring/nginx-proxy-manager/logs/*.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<ip>\S+) \S+ \S+ \[(?P<time>[^\]]+)\] "(?P<method>\S+) (?P<path>\S+) (?P<proto>\S+)" (?P<status>\d+) (?P<size>\d+)'
+      - labels:
+          method:
+          status:
+          path:
+
+  # --------------------------------------------------
+  # Pi-hole DNS Logs
+  # --------------------------------------------------
+  - job_name: pihole
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: pihole
+          __path__: /var/log/pihole/*.log
+
+  # --------------------------------------------------
+  # Application Logs (mounted from apps)
+  # --------------------------------------------------
+  - job_name: app-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: applications
+          __path__: /mnt/apps/*/logs/*.log

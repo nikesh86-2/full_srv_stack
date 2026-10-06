@@ -13,6 +13,10 @@ services:
       - "${NPM_HTTP_PORT}:80"      # HTTP
       - "${NPM_ADMIN_PORT}:81"     # Admin UI
       - "${NPM_HTTPS_PORT}:443"    # HTTPS
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - DB_SQLITE_FILE=${DB_SQLITE_FILE}
 
     volumes:
       # Configuration database and settings
@@ -20,3 +24,23 @@ services:
 
       # Let's Encrypt certificates
       - ${NPM_LETSENCRYPT_PATH}:/etc/letsencrypt
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    external: true

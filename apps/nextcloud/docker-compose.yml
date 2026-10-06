@@ -5,11 +5,41 @@ services:
       - .env
     volumes:
       - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    networks:
+      - monitoring
 
   redis:
     image: redis:alpine
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 32M
+    networks:
+      - monitoring
 
   app:
     image: nextcloud:latest
@@ -23,4 +53,23 @@ services:
     volumes:
       - ${NEXTCLOUD_CONFIG}:/var/www/html
       - ${NEXTCLOUD_DATA}:/var/www/html/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    external: true

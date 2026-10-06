@@ -25,6 +25,18 @@ services:
       # Enable logging
       - LOG_FILE=true
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     restart: unless-stopped
-
-
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 16M

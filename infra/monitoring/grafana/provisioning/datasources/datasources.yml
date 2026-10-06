@@ -1,0 +1,57 @@
+# Grafana Datasource Provisioning
+# See: https://grafana.com/docs/grafana/latest/administration/provisioning/#data-sources
+
+apiVersion: 1
+
+datasources:
+  # --------------------------------------------------
+  # Loki - Log aggregation
+  # --------------------------------------------------
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: true
+    editable: false
+    jsonData:
+      derivedFields:
+        - name: traceID
+          matcherRegex: "trace[=:]([a-f0-9]+)"
+          url: "$${__value.raw}"
+          datasourceUid: tempo
+
+  # --------------------------------------------------
+  # Prometheus - Metrics
+  # --------------------------------------------------
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: false
+    editable: false
+    jsonData:
+      timeInterval: "30s"
+      queryTimeout: "60s"
+      httpMethod: "POST"
+
+  # --------------------------------------------------
+  # Alertmanager - Alerting
+  # --------------------------------------------------
+  - name: Alertmanager
+    type: alertmanager
+    access: proxy
+    url: http://alertmanager:9093
+    isDefault: false
+    editable: false
+    jsonData:
+      implementation: "prometheus"
+
+  # --------------------------------------------------
+  # Node Exporter - Host metrics (if not using Prometheus)
+  # --------------------------------------------------
+  # - name: Node Exporter
+  #   type: prometheus
+  #   access: proxy
+  #   url: http://node-exporter:9100
+  #   isDefault: false
+  #   editable: false

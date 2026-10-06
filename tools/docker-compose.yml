@@ -10,6 +10,7 @@ services:
     user: "${PUID}:${PGID}"
     networks:
       - media
+      - monitoring
     ports:
       - "${HOMEPAGE_PORT}:3000"
     environment:
@@ -22,7 +23,20 @@ services:
 
       # Docker socket for container stats widgets
       - /var/run/docker.sock:/var/run/docker.sock
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
 
 
   # --------------------------------------------------
@@ -37,7 +51,22 @@ services:
     volumes:
       - ./uptime-kuma:/app/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
+    networks:
+      - monitoring
 
 
   # --------------------------------------------------
@@ -52,7 +81,22 @@ services:
     volumes:
       # Allows Dozzle to read container logs
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 32M
+    networks:
+      - monitoring
 
 
   # --------------------------------------------------
@@ -73,10 +117,25 @@ services:
 
       # Host OS information
       - /etc/os-release:/etc/os-release:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 32M
 
 
 # Shared network used by media containers
 networks:
   media:
+    external: true
+  monitoring:
     external: true

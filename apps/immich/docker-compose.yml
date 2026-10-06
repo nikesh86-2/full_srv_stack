@@ -12,9 +12,24 @@ services:
     depends_on:
       - redis
       - database
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: always
     healthcheck:
       disable: false
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    networks:
+      - monitoring
 
   immich-machine-learning:
     container_name: immich_machine_learning
@@ -23,16 +38,46 @@ services:
       - .env
     volumes:
       - model-cache:/cache
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: always
     healthcheck:
       disable: false
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    networks:
+      - monitoring
 
   redis:
     container_name: immich_redis
     image: redis:alpine
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: always
     healthcheck:
       test: redis-cli ping || exit 1
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 32M
+    networks:
+      - monitoring
 
   database:
     container_name: immich_postgres
@@ -42,9 +87,28 @@ services:
     volumes:
       - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
     shm_size: 128mb
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: always
     healthcheck:
       disable: false
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    networks:
+      - monitoring
 
 volumes:
   model-cache:
+
+networks:
+  monitoring:
+    external: true

@@ -1,0 +1,31 @@
+services:
+  ddns-updater:
+    image: qmcgaw/ddns-updater
+    container_name: ddns-updater
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/updater/data
+    environment:
+      - PERIOD=5m
+      - LOG_LEVEL=info
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 16M
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    external: true

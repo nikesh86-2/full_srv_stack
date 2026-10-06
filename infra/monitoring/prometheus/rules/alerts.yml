@@ -1,0 +1,177 @@
+# Prometheus Alerting Rules
+# See: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
+
+groups:
+  - name: host-alerts
+    interval: 30s
+    rules:
+      - alert: HostDown
+        expr: up{job="node-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Host is down"
+          description: "Node exporter has been down for 1 minute"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage > 85% for 5 minutes"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage > 85% for 5 minutes"
+
+      - alert: DiskSpaceCritical
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space critical on {{ $labels.instance }}"
+          description: "Root filesystem has less than 10% free"
+
+      - alert: DiskSpaceWarning
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 20
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk space warning on {{ $labels.instance }}"
+          description: "Root filesystem has less than 20% free"
+
+  - name: container-alerts
+    interval: 30s
+    rules:
+      - alert: ContainerDown
+        expr: up{job=~"cadvisor|docker|immich|nextcloud|home-assistant|jellyfin|audiobookshelf|nginx-proxy-manager|pihole|glances|watchtower|uptime-kuma|media-services"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.job }} is down"
+          description: "{{ $labels.job }} has been down for 1 minute"
+
+      - alert: ContainerHighCPU
+        expr: sum by(container, job) (rate(container_cpu_usage_seconds_total[5m])) / sum by(container, job) (container_spec_cpu_quota / container_spec_cpu_period) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage for container {{ $labels.container }}"
+          description: "Container CPU usage > 80% for 5 minutes"
+
+      - alert: ContainerCPUThrottled
+        expr: rate(container_cpu_cfs_throttled_periods_total[5m]) / rate(container_cpu_cfs_periods_total[5m]) * 100 > 25
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.container }} is CPU throttled"
+          description: "Container is hitting its CPU limit (>25% of periods throttled for 10 minutes); consider raising deploy.resources.limits.cpus"
+
+      - alert: ContainerHighMemory
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage for container {{ $labels.container }}"
+          description: "Container memory usage > 85% for 5 minutes"
+
+      - alert: ContainerRestartLoop
+        expr: rate(container_start_time_seconds[15m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.container }} restarting frequently"
+          description: "Container has restarted more than 6 times in 15 minutes"
+
+  - name: service-alerts
+    interval: 60s
+    rules:
+      - alert: ImmichUploadStalled
+        expr: rate(immich_uploads_total[10m]) == 0 and immich_uploads_total > 0
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: "Immich uploads stalled"
+          description: "No uploads in 30 minutes but uploads exist"
+
+      - alert: NextcloudLowSpace
+        expr: (nextcloud_storage_free / nextcloud_storage_total) * 100 < 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Nextcloud storage low"
+          description: "Nextcloud has less than 15% free storage"
+
+      - alert: JellyfinTranscodingHigh
+        expr: jellyfin_transcoding_active > 5
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "High transcoding activity on Jellyfin"
+          description: "More than 5 concurrent transcodes for 10 minutes"
+
+      - alert: PiHoleBlockedQueriesHigh
+        expr: rate(pihole_queries_blocked[5m]) / rate(pihole_queries_total[5m]) * 100 > 50
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "High block rate on Pi-hole"
+          description: "Over 50% of DNS queries blocked"
+
+  - name: monitoring-alerts
+    interval: 60s
+    rules:
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus is down"
+          description: "Prometheus has been down for 1 minute"
+
+      - alert: LokiDown
+        expr: up{job="loki"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Loki is down"
+          description: "Loki has been down for 1 minute"
+
+      - alert: GrafanaDown
+        expr: up{job="grafana"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Grafana is down"
+          description: "Grafana has been down for 1 minute"
+
+      - alert: AlertmanagerDown
+        expr: up{job="alertmanager"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alertmanager is down"
+          description: "Alertmanager has been down for 1 minute"

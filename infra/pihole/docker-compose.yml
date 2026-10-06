@@ -11,6 +11,7 @@ services:
     networks:
       pihole_ipvlan:
         ipv4_address: ${PIHOLE_IP}
+      monitoring:
 
     environment:
       TZ: ${TZ}
@@ -23,7 +24,21 @@ services:
       # DNS logs
       - ${PIHOLE_LOG_PATH}:/var/log/pihole
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
 
 # --------------------------------------------------
 # Networks
@@ -32,4 +47,8 @@ networks:
 
   # Static IP network for Pi-hole
   pihole_ipvlan:
+    external: true
+
+  # Monitoring network for Prometheus/Loki
+  monitoring:
     external: true

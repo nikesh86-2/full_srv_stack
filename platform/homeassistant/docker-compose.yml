@@ -17,6 +17,19 @@ services:
       - TZ=${TZ}
       - PUID=${PUID}
       - PGID=${PGID}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
 
   music-assistant:
     container_name: music-assistant
@@ -29,7 +42,20 @@ services:
     volumes:
       - ./ma-config/data:/data
       - ${MUSIC_PATH}:/music:ro # NAS integration via NFS/SMB mount, using .env variable
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 128M
     depends_on:
       - home-assistant
 
@@ -41,6 +67,19 @@ services:
     volumes:
       - ./whisper-data:/data
     command: --model tiny-int8 --language en
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
 
   piper:
     container_name: piper
@@ -50,3 +89,16 @@ services:
     volumes:
       - ./piper-data:/data
     command: --voice en_GB-alba-medium
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 64M

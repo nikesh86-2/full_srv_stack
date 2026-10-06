@@ -1,0 +1,15 @@
+# Grafana Dashboard Provisioning
+# See: https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+
+apiVersion: 1
+
+providers:
+  - name: 'SRV Stack Dashboards'
+    orgId: 1
+    folder: 'SRV Stack'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
