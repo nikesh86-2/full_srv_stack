@@ -139,14 +139,17 @@ deploy:
 ```
 
 ### How limits are enforced
-- **`limits` are hard caps enforced by `docker compose up`** (non-swarm). CPU is
-  enforced through the `cpu` cgroup controller; memory through the `memory`
-  controller.
-- **`reservations` are only honoured by Docker Swarm** (`docker stack deploy`).
-  Plain `docker compose` records them but does not enforce them.
-- Memory limits require a kernel/cgroup with the **memory controller** enabled.
-  Check `docker info` — a `WARNING: No memory limit support` line means memory
-  caps are discarded in that environment (CPU limits still apply).
+- **`limits.cpus` is enforced by `docker compose up`** (non-swarm) through the
+  `cpu` cgroup controller.
+- **`limits.memory` is enforced through the `memory` cgroup controller**.
+- **`reservations.memory` is applied by Compose V2 as a cgroup memory _soft_
+  limit** (this is not Swarm-only). **`reservations.cpus` is not enforced by
+  plain Compose** — it is advisory / used for Swarm scheduling only.
+- Memory enforcement requires a kernel/cgroup with the **memory controller**
+  available. Check `docker info` — a `WARNING: No memory limit support` line
+  means memory caps *and* reservations are discarded in that environment (CPU
+  limits still apply). Confirm the controller is present with
+  `cat /sys/fs/cgroup/cgroup.controllers` (it must list `memory`).
 
 ### Applied limits
 

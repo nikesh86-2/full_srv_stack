@@ -28,8 +28,10 @@ Each service now declares `deploy.resources.limits` (CPU + memory) plus
 `SRV-STACK-OVERVIEW.md` for the full table and rollout instructions.
 
 > **Notes:**
-> - Under plain `docker compose` (non-swarm), `limits` are enforced but
->   `reservations` are only honoured by Docker Swarm (`docker stack deploy`).
+> - Under plain `docker compose` (non-swarm): `limits.cpus` is enforced and
+>   `reservations.memory` is applied as a cgroup memory soft limit, while
+>   `limits.memory` requires the host memory cgroup controller and
+>   `reservations.cpus` is advisory only.
 > - Existing containers must be recreated (`docker compose up -d`) for the
 >   limits to take effect.
 > - Memory limits require a host kernel/cgroup with the memory controller
